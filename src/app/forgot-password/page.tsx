@@ -20,12 +20,20 @@ export default function ForgotPasswordPage() {
       await forgotPassword(formData)
     } catch (err: unknown) {
       if (err instanceof Error && err.message === 'NEXT_REDIRECT') {
-        // Redirect is normal — extract message from URL manually
-        const url = (err as { digest?: string }).digest || ''
-        if (url.includes('Gagal')) {
-          setMessage({ text: 'Gagal mengirim email. Coba lagi beberapa saat.', type: 'error' })
+        // Extract actual message from the redirect URL digest
+        // Digest format: NEXT_REDIRECT;replace;/forgot-password?message=...
+        const digest = (err as { digest?: string }).digest || ''
+        const redirectUrl = digest.split(';').pop() || ''
+        let actualMessage = ''
+        try {
+          const urlObj = new URL(redirectUrl, 'http://localhost')
+          actualMessage = urlObj.searchParams.get('message') || ''
+        } catch { }
+
+        if (actualMessage.includes('Gagal')) {
+          setMessage({ text: actualMessage, type: 'error' })
         } else {
-          setMessage({ text: 'Link reset telah dikirim! Silakan cek inbox atau folder Spam email Anda.', type: 'success' })
+          setMessage({ text: actualMessage || 'Link reset telah dikirim! Silakan cek inbox atau folder Spam email Anda.', type: 'success' })
         }
       } else {
         setMessage({ text: 'Link reset telah dikirim! Silakan cek inbox atau folder Spam email Anda.', type: 'success' })
