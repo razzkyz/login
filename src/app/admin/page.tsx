@@ -59,7 +59,7 @@ export default async function AdminPage() {
 
             {/* Actions */}
             <div className="flex items-center gap-2 sm:gap-3">
-              <Link href="/dashboard" className="text-xs sm:text-sm font-medium text-slate-400 hover:text-white bg-transparent hover:bg-slate-800 rounded-lg px-3 py-1.5 transition-all duration-200 flex items-center gap-1.5">
+              <Link href="/dashboard" className="text-xs sm:text-sm font-medium text-slate-300 hover:text-white bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg px-3 py-1.5 transition-all duration-200 flex items-center gap-1.5">
                 <ArrowLeft className="w-3.5 h-3.5" />
                 Dashboard
               </Link>
