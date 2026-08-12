@@ -6,7 +6,8 @@ import { redirect } from 'next/navigation'
 import { logout } from '../login/actions'
 import { getAllLogs } from '@/lib/logger'
 import Link from 'next/link'
-import { ShieldAlert, Users, Shield, Activity, FolderOpen, ArrowLeft, LogOut } from 'lucide-react'
+import { ShieldAlert, Users, Shield, Activity, FolderOpen, ArrowLeft } from 'lucide-react'
+import LogoutButton from '@/components/LogoutButton'
 
 export const metadata = {
   title: 'Panel Admin | Portal Aplikasi',
@@ -66,12 +67,7 @@ export default async function AdminPage() {
               <div className="w-8 h-8 bg-amber-600 rounded-full flex items-center justify-center shadow-sm">
                 <span className="text-white text-xs font-bold">{initials}</span>
               </div>
-              <form action={logout}>
-                <button className="text-xs sm:text-sm text-slate-400 hover:text-white bg-transparent hover:bg-slate-800 rounded-lg px-3 py-1.5 transition-all duration-200 flex items-center gap-1.5">
-                  <LogOut className="w-3.5 h-3.5" />
-                  Keluar
-                </button>
-              </form>
+              <LogoutButton logoutAction={logout} />
             </div>
           </div>
         </div>

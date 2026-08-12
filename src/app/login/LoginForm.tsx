@@ -24,11 +24,12 @@ export default function LoginForm({ loginAction }: LoginFormProps) {
       const result = await loginAction(formData)
       if (result?.error) {
         toast.error(result.error, {
-          style: {
-            borderRadius: '10px',
-            background: '#333',
-            color: '#fff',
-          },
+          style: { borderRadius: '12px', background: '#1e293b', color: '#fff', border: '1px solid #334155' },
+        })
+      } else {
+        toast.success('Login berhasil! Mengalihkan...', {
+          style: { borderRadius: '12px', background: '#1e293b', color: '#fff', border: '1px solid #334155' },
+          iconTheme: { primary: '#22c55e', secondary: '#fff' },
         })
       }
     } catch (err: unknown) {

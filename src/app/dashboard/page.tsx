@@ -7,7 +7,8 @@ import { logout } from '../login/actions'
 import { getUserLogs } from '@/lib/logger'
 import MarketWidget from '@/components/MarketWidget'
 import Link from 'next/link'
-import { LayoutDashboard, ShieldCheck, Shield, Activity, FolderOpen, LogOut, CheckCircle2 } from 'lucide-react'
+import { LayoutDashboard, ShieldCheck, Shield, Activity, FolderOpen, CheckCircle2 } from 'lucide-react'
+import LogoutButton from '@/components/LogoutButton'
 
 export const metadata = {
   title: 'Dashboard | Portal Aplikasi',
@@ -70,15 +71,7 @@ export default async function DashboardPage() {
                   <p className="text-slate-400 text-xs capitalize">{profile?.role || 'user'}</p>
                 </div>
               </div>
-              <form action={logout}>
-                <button
-                  id="logout-button"
-                  className="text-xs sm:text-sm text-slate-400 hover:text-white bg-transparent hover:bg-slate-800 rounded-lg px-3 py-1.5 transition-all duration-200 flex items-center gap-1.5"
-                >
-                  <LogOut className="w-3.5 h-3.5" />
-                  Keluar
-                </button>
-              </form>
+              <LogoutButton logoutAction={logout} />
             </div>
           </div>
         </div>
