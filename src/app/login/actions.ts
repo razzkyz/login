@@ -166,7 +166,7 @@ export async function updatePassword(formData: FormData) {
   const { error } = await supabase.auth.updateUser({ password: parsed.data.password })
 
   if (error) {
-    redirect('/update-password?message=Gagal memperbarui kata sandi. Silakan minta link reset baru.')
+    redirect(`/update-password?message=${encodeURIComponent(`Gagal: ${error.message}`)}`)
   }
 
   if (user) {
