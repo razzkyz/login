@@ -137,16 +137,18 @@ export async function forgotPassword(formData: FormData) {
   }
 
   const supabase = await createClient()
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
   const { error } = await supabase.auth.resetPasswordForEmail(parsed.data.email, {
-    redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/update-password`,
+    redirectTo: `${siteUrl}/auth/callback?next=/update-password`,
   })
 
-  // Always show success to prevent email enumeration
-  if (!error) {
-    await logActivity(null, 'PASSWORD_RESET_REQUESTED', { email: parsed.data.email })
+  if (error) {
+    console.error('Reset password error:', error.message)
+    redirect(`/forgot-password?message=${encodeURIComponent('Gagal mengirim email. Coba lagi beberapa saat.')}`)  
   }
 
-  redirect('/forgot-password?message=Jika email terdaftar, link reset telah dikirim.')
+  await logActivity(null, 'PASSWORD_RESET_REQUESTED', { email: parsed.data.email })
+  redirect(`/forgot-password?message=${encodeURIComponent('Link reset telah dikirim! Silakan cek inbox atau folder Spam email Anda.')}`)    
 }
 
 export async function updatePassword(formData: FormData) {
