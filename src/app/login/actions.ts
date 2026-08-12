@@ -144,7 +144,7 @@ export async function forgotPassword(formData: FormData) {
 
   if (error) {
     console.error('Reset password error:', error.message)
-    redirect(`/forgot-password?message=${encodeURIComponent('Gagal mengirim email. Coba lagi beberapa saat.')}`)  
+    redirect(`/forgot-password?message=${encodeURIComponent(`Gagal: ${error.message}`)}`)  
   }
 
   await logActivity(null, 'PASSWORD_RESET_REQUESTED', { email: parsed.data.email })
