@@ -65,15 +65,11 @@ export async function login(formData: FormData) {
   cookieStore.delete('login_attempts')
   cookieStore.delete('login_lockout')
 
-  // Log successful login
-  await logActivity(data.user.id, 'LOGIN_SUCCESS', { email: data.user.email })
-
-  // Cek role untuk menentukan arah redirect
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('role')
-    .eq('id', data.user.id)
-    .single()
+  // Log successful login dan cek role secara bersamaan (Paralel untuk mengurangi lag)
+  const [_, { data: profile }] = await Promise.all([
+    logActivity(data.user.id, 'LOGIN_SUCCESS', { email: data.user.email }),
+    supabase.from('profiles').select('role').eq('id', data.user.id).single()
+  ])
 
   const destination = profile?.role === 'admin' ? '/admin' : '/dashboard'
 
