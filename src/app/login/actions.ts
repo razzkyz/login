@@ -8,6 +8,9 @@ import { logActivity } from '@/lib/logger'
 
 import { cookies } from 'next/headers'
 
+// In-memory store for rate limiting (For production, use Redis or Database)
+const rateLimitMap = new Map<string, { attempts: number; lockUntil: number }>()
+
 // Generic safe error message - never reveal specifics
 const SAFE_ERROR = 'Email tidak terdaftar atau kata sandi salah!'
 
@@ -17,20 +20,16 @@ export async function login(formData: FormData) {
     password: formData.get('password') as string,
   }
 
-  // Rate Limiting (5 times) using cookies
-  const cookieStore = await cookies()
-  const attemptsStr = cookieStore.get('login_attempts')?.value
-  const lockoutTimeStr = cookieStore.get('login_lockout')?.value
+  // Server-side Rate Limiting (berbasis memori untuk demo, idealnya pakai Redis/DB)
+  const clientIP_or_Email = raw.email // Menggunakan email sebagai identifier (bisa juga IP jika tersedia di headers)
+  const rateLimit = rateLimitMap.get(clientIP_or_Email) || { attempts: 0, lockUntil: 0 }
 
-  if (lockoutTimeStr) {
-    const lockoutTime = parseInt(lockoutTimeStr, 10)
-    if (Date.now() < lockoutTime) {
-      const minutesLeft = Math.ceil((lockoutTime - Date.now()) / 60000)
-      return { error: `Terlalu banyak percobaan. Tunggu ${minutesLeft} menit lagi.` }
-    } else {
-      cookieStore.delete('login_lockout')
-      cookieStore.delete('login_attempts')
-    }
+  if (rateLimit.lockUntil > Date.now()) {
+    const minutesLeft = Math.ceil((rateLimit.lockUntil - Date.now()) / 60000)
+    return { error: `Terlalu banyak percobaan. Tunggu ${minutesLeft} menit lagi.` }
+  } else if (rateLimit.lockUntil !== 0 && rateLimit.lockUntil <= Date.now()) {
+    rateLimit.attempts = 0
+    rateLimit.lockUntil = 0
   }
 
   // Server-side validation
@@ -44,17 +43,17 @@ export async function login(formData: FormData) {
   const { data, error } = await supabase.auth.signInWithPassword(parsed.data)
 
   if (error) {
-    // Increment attempts
-    const attempts = attemptsStr ? parseInt(attemptsStr, 10) + 1 : 1
-    cookieStore.set('login_attempts', attempts.toString(), { maxAge: 3600 })
+    // Increment attempts server-side
+    rateLimit.attempts += 1
     
-    if (attempts >= 5) {
+    if (rateLimit.attempts >= 5) {
       // Lock for 5 minutes
-      const lockoutExpiry = Date.now() + 5 * 60 * 1000
-      cookieStore.set('login_lockout', lockoutExpiry.toString(), { maxAge: 5 * 60 })
-      cookieStore.set('login_attempts', '0', { maxAge: 3600 })
+      rateLimit.lockUntil = Date.now() + 5 * 60 * 1000
+      rateLimitMap.set(clientIP_or_Email, rateLimit)
       return { error: 'Terlalu banyak percobaan gagal. Silakan tunggu 5 menit.' }
     }
+    
+    rateLimitMap.set(clientIP_or_Email, rateLimit)
 
     // Log failed attempt without exposing reason
     await logActivity(null, 'LOGIN_FAILED', { email: parsed.data.email })
@@ -62,8 +61,7 @@ export async function login(formData: FormData) {
   }
 
   // Success: clear attempts
-  cookieStore.delete('login_attempts')
-  cookieStore.delete('login_lockout')
+  rateLimitMap.delete(clientIP_or_Email)
 
   // Log successful login dan cek role secara bersamaan (Paralel untuk mengurangi lag)
   const [_, { data: profile }] = await Promise.all([
